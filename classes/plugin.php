@@ -27,73 +27,69 @@ class Plugin {
        return self::$_instance;
     }
 
-
     /**
-     * Интерфейс плагина
-     * @var UI
+     * Слаг страницы плагина
      */
-    private $ui;
+    const SLUG = JCRM_ELBA;
 
    /**
     * Конструктор класса
     */
     private function __construct() {
-        // Интерфейс плагина
-        // $this->ui = new UI();
-
-        // Регистрируем расширение
-        add_filter( 'jpcrm_register_free_extensions', array( $this, 'register_extension' ) );
-
-        // Корректирует URL элементов расширения
-        add_filter( 'plugins_url', array( $this, 'plugins_url' ), 10, 3 );
-
-        // Остальная работа по регистрации расширения
-        add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
-    }
-
-    /**
-     * Метод регистрирует расширение
-     * @param mixed $exts   Массив расширений
-     */
-    public function register_extension( $exts ) {
-    	$exts['elba'] = array(
-            'name'       => __( 'Контур.Эльба', JCRM_ELBA ),
-            'i'          => 'elba-logo.png',
-            'short_desc' => __( ' Интеграция Jetpack CRM с Контур.Эльба (загрузка счетов Эльбы)', JCRM_ELBA ),
-        );
-        return $exts;
-    }
-
-    /**
-     * Метод корректирует URL объектов плагина из папки Jetpack CRM на свою папку
-     * @param string $url       URL
-     * @param string $path      Path
-     * @param string $plugin    Plugin
-     */
-    public function plugins_url( $url, $path, $plugin ) {
-        if ( ZBS_ROOTFILE == $plugin ) {
-            if ( 'i/elba-logo.png' == $path ) $url = JCRM_ELBA_URL . 'assets/' . $path;
-        }
-        return $url;
-    }
-
-    /**
-     * Метод корректирует URL объектов плагина из папки Jetpack CRM на свою папку
-     */
-    public function plugins_loaded() {
-        global $zeroBSCRM_extensionsCompleteList;
-        $zeroBSCRM_extensionsCompleteList['elba'] = array(
-            'fallbackname' => __( 'Контур.Эльба', JCRM_ELBA ),
-            'imgstr'       => '<i class="fa fa-keyboard-o" aria-hidden="true"></i>',
-            'desc'         => __( ' Интеграция Jetpack CRM с Контур.Эльба (загрузка счетов Эльбы)', JCRM_ELBA ),
-            'colour'       => 'rgb(126, 88, 232)',
-            'shortname'    => __( 'Контур.Эльба', JCRM_ELBA ), // used where long name won't fit
-        );
-
-
-        global $jpcrm_core_extension_setting_map;
-        $jpcrm_core_extension_setting_map['elba'] = 'feat_elba';
-
+        // Initialize Hooks
+        add_filter( 'zbs-tools-menu', array( $this, 'add_tools_menu_sub_item_link' ) );
+        add_filter( 'zbs_menu_wpmenu', array( $this, 'add_wp_pages' ), 10, 1 );
     } 
-    
+ 
+	/**
+	 * Adds Tools menu sub item
+	 */
+	public function add_tools_menu_sub_item_link( $menu_items ) {
+		global $zbs;
+		$menu_items[] = '<a href="' . 
+            zeroBSCRM_getAdminURL( self::SLUG ) . 
+            '" class="item"><i class="cloud upload icon"></i>' . 
+            __( 'Контур.Эльба', JCRM_ELBA ) .
+            '</a>';
+		return $menu_items;
+	}
+
+	/**
+	 * Main page addition
+	 */
+	function add_wp_pages( $menu_array=array() ) {
+		global $zbs;
+		// Get the admin layout option 1 = Full, 2 = Slimline, 3 = CRM Only
+		$menu_mode = zeroBSCRM_getSetting( 'menulayout' );
+
+		// depending on layout option, we add sub items or main items:
+		if ( $menu_mode === ZBS_MENU_SLIM ) {
+			// add a sub toplevel item:
+			$menu_array['zbs']['subitems'][JCRM_ELBA] = array(
+				'title'      => __( 'Контур.Эльба', JCRM_ELBA ),
+				'url'        => self::SLUG,
+				'perms'      => 'admin_zerobs_manage_options',
+				'order'      => 1,
+				'wpposition' => 1,
+				'callback'   => 'jpcrm_woosync_render_hub_page',
+				'stylefuncs' => array( 'zeroBSCRM_global_admin_styles', 'jpcrm_woosync_hub_page_styles_scripts' ),
+			);
+		} 
+        else {
+        	// add a sub datatools item
+			$menu_array['datatools']['subitems'][JCRM_ELBA] = array(
+				'ico'        => 'dashicons-admin-users',
+				'title'      => __( 'Контур.Эльба', JCRM_ELBA ),
+				'url'        => self::SLUG,
+				'perms'      => 'admin_zerobs_view_customers',
+				'order'      => 10, 'wpposition' => 25,
+				'subitems'   => array(),
+				'callback'   => 'jpcrm_woosync_render_hub_page',
+				'stylefuncs' => array( 'zeroBSCRM_global_admin_styles', 'jpcrm_woosync_hub_page_styles_scripts' ),
+			);
+		}
+		return $menu_array;
+	} 
+
+
 }

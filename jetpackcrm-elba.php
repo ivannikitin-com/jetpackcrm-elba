@@ -59,7 +59,7 @@ add_action( 'plugins_loaded', function() {
         // 'url' => 'https://jetpackcrm.com/feature/',
         'colour'       => 'rgb(126, 88, 232)',
         'helpurl'      => 'https://github.com/ivannikitin-com/jetpackcrm-elba',
-        'shortname'    => __( 'Интеграция Jetpack CRM с Контур.Эльба', JCRM_ELBA ), // used where long name won't fit
+        'shortname'    => __( 'Импорт данных Контур.Эльба', JCRM_ELBA ), // used where long name won't fit
     );
 
     global $jpcrm_core_extension_setting_map;
@@ -80,10 +80,10 @@ add_action( 'jpcrm_load_modules', function() {
 	global $zbs;
 	if ( zeroBSCRM_isExtensionInstalled( JCRM_ELBA ) ) {
         /* Классы */
-        //require_once( JCRM_ELBA_DIR . '/classes/plugin.php' );
+        require_once( JCRM_ELBA_DIR . '/classes/plugin.php' );
         //require_once( JCRM_ELBA_DIR . '/classes/ui.php' );
 
         // Запуск
-        //\JCRM_ELBA\Plugin::get_instance();
+        \JCRM_ELBA\Plugin::get_instance();
 	}    
 } );
